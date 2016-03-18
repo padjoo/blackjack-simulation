@@ -171,7 +171,7 @@ public class Blackjack implements Logger {
 			}
 			
 			// Validate
-			valid = (value == "c" || value == "a");
+			valid = (value.equals("c") || value.equals("a"));
 			
 			if (!valid) {
 				echo("Value needs to be 'c' or 'a'");
