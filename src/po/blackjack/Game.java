@@ -100,8 +100,6 @@ public class Game {
 				dealer.addCard(shoe.pullCard());
 			}
 			
-			logger.log("dealer",  dealer.getInfo());
-			
 			// Collect each hand
 			Hand dealerHand = dealer.getHand();
 			for (Gambler player : players) {
@@ -137,6 +135,8 @@ public class Game {
 			}
 			// Discard dealer hand
 			shoe.discardCards(dealerHand.getCards());
+
+			logger.log("dealer",  dealer.getInfo());
 			
 			round++;
 		}

@@ -49,8 +49,6 @@ public class Blackjack implements Logger {
 	 * Application runs on construction
 	 */
 	public Blackjack() {
-		int maxHands = 50;
-		
 		log("application_start", "Blackjack Simulator");
 
 		// Create game
@@ -59,56 +57,37 @@ public class Blackjack implements Logger {
 		// Send logs to this class for output
 		game.setLogger(this);
 
-		// Players
-		game.addPlayer(new Gambler("Player 1", 100, 200, 15, PlayingStrategyFactory.factory("c")));
-		game.addPlayer(new Gambler("Player 2", 200, 500, 25, PlayingStrategyFactory.factory("a")));
-
-		// 1 deck
-		game.addDecksToShoeAndShuffle(1);
-		
-		// Play simulation
-		game.play(maxHands);
-		
 		/*
 		 * Inputs
 		 * - no of players
 		 * 		chips, target, strategy
 		 * 		
 		 */
-		/* int noOfPlayers = promptInt("Enter no. of players (2 - 5)");
-		// Validate
-		if (noOfPlayers < 0 || noOfPlayers > 5) {
-			fail("players needs to be in the range 1 to 5");
-			return;
-		}
+		int noOfPlayers = promptInt("Number of players", 2, 1, 5);
+		int maxHands = promptInt("Max hands", 100, 1, 9999);
 		
+		// Players
 		for (int i = 1; i <= noOfPlayers; i++) {
 			String name = String.format("Player %d", i);
 			
-			int chips = promptInt(String.format("%s: chips", name));
-			if (chips < 0) {
-				fail("chips needs to be at least 1");
-				return;
-			}
+			int chips = promptInt(String.format("%s: chips", name), 100, 0, 99999);
+			int target = promptInt(String.format("%s: target chips", name), 200, 0, 99999);
+			int bet = promptInt(String.format("%s: bet", name), 10, 0, 99999);
 			
-			String strategy = prompt(String.format("%s: strategy (c=conservatie, a=aggressive)", name));
-			if ("c" != name && "a" != name) {
-				fail("c or a please");
-				return;
-			}
+			String strategy = promptStrategy(name);
 			
-			int target = promptInt(String.format("%s: target chips", name));
-			if (target < 0) {
-				fail("target needs to be at least 1");
-				return;
-			}
-			
-			game.addPlayer(new Player(
-				chips,
-				target,
-				("c" == strategy) ? new ConservativePlayingStrategy() : new AggressivePlayingStrategy(),
-			));
-		} */
+			// Add player
+			game.addPlayer(new Gambler(name, chips, target, bet, PlayingStrategyFactory.factory(strategy)));
+		}
+		
+		//game.addPlayer(new Gambler("Player 1", 100, 200, 15, PlayingStrategyFactory.factory("c")));
+		//game.addPlayer(new Gambler("Player 2", 200, 500, 25, PlayingStrategyFactory.factory("a")));
+
+		// 1 deck
+		game.addDecksToShoeAndShuffle(1);
+		
+		// Play simulation
+		game.play(maxHands);
 	}
 	
 	public void log(String event, String message) {
@@ -133,35 +112,72 @@ public class Blackjack implements Logger {
 		return reader;
 	}
 	
-	private void fail(String error) {
-		echo("FAILURE: " + error);
-	}
-	
-	private String prompt(String prompt) {
+	private String promptString(String prompt) {
 		System.out.print(prompt + ": ");
-		String input = "";
+		String input;
 	    
 		try {
 	    	input = getReader().readLine();
 	    } catch (IOException e) {
+	    	input = "";
 	    	// Ignore errors
 	        //e.printStackTrace();
 	    }
-	    
+		
 	    return input;
 	}
 	
-	private int promptInt(String prompt) {
-		String input = prompt(prompt);
+	private int promptInt(String prompt, int defaultValue, int min, int max) {
+		String input;
+		int value;
+		boolean valid;
 		
-		System.out.print(String.format("%s: (Default: %d)", prompt));
-		 
-	    try {
-	    	return Integer.parseInt(input);
-	    } catch (NumberFormatException e) {
-	        //e.printStackTrace();
-	    }
-	    
-	    return 0;
+		do {
+			input = promptString(String.format("%s (%d-%d) (default: %d)", prompt, min, max, defaultValue));
+			
+			if (input == null || input.isEmpty()) {
+				value = defaultValue;
+			} else {
+				try {
+			    	value = Integer.parseInt(input);
+			    } catch (NumberFormatException e) {
+			        //e.printStackTrace();
+			    	value = -1;
+			    }
+			}
+			
+			// Validate
+			valid = (min <= value && value <= max);
+			
+			if (!valid) {
+				echo(String.format("Value needs to be between %d and %d", min, max));
+			}
+		} while (!valid);
+		
+	    return value;
 	}
+
+	private String promptStrategy(String name) {
+		String prompt = String.format("%s: strategy (c=conservatie, a=aggressive) (default: c)", name);
+		String defaultValue = "c";
+		String value;
+		boolean valid;
+		
+		do {
+			value = promptString(prompt);
+
+			if (value == null || value.isEmpty()) {
+				value = defaultValue;
+			}
+			
+			// Validate
+			valid = (value == "c" || value == "a");
+			
+			if (!valid) {
+				echo("Value needs to be 'c' or 'a'");
+			}
+		} while (!valid);
+		
+	    return value;
+	}	
 }
